@@ -1,5 +1,5 @@
 [package]
-name = "husky"
+name = "husky_graphics"
 version = "0.1.0"
 authors = ["Luuk van Oijen <lazyluuk.channel@gmail.com>"]
 edition = "2018"
@@ -8,10 +8,7 @@ edition = "2018"
 
 [dependencies]
 log = "*"
-pretty_env_logger = "*"
 
 glutin = "0.26.0"
 glam = "0.16.0"
-
-husky_lua = { path = "husky_lua" }
-husky_graphics = { path = "husky_graphics" }
+gl = "0.14.0"

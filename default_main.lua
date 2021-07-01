@@ -1,0 +1,3 @@
+function husky.draw()
+
+end
