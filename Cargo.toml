@@ -10,6 +10,8 @@ edition = "2018"
 log = "*"
 pretty_env_logger = "*"
 
+getopts = "0.2.21"
+
 glutin = "0.26.0"
 glam = "0.16.0"
 
