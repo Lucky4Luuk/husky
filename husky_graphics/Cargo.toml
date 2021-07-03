@@ -13,4 +13,7 @@ glutin = "0.26.0"
 glam = "0.16.0"
 gl = "0.14.0"
 
+glyph_brush = "0.7.2"
+lazy_static = "1.4.0"
+
 mlua = "0.6.1"

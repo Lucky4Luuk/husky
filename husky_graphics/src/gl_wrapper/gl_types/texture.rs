@@ -1,6 +1,7 @@
 use core::ffi::c_void;
 
 /// 2D texture
+#[derive(Clone)]
 pub struct Texture {
     pub id: gl::types::GLuint,
     pub format: gl::types::GLint,
