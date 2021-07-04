@@ -5,18 +5,21 @@ pub trait BufferType {
     const BUFFER_TYPE: gl::types::GLuint;
 }
 
+#[derive(Clone)]
 pub struct BufferTypeArray;
 impl BufferType for BufferTypeArray {
     const BUFFER_TYPE: gl::types::GLuint = gl::ARRAY_BUFFER;
 }
 pub type ArrayBuffer = Buffer<BufferTypeArray>;
 
+#[derive(Clone)]
 pub struct BufferTypeElementArray;
 impl BufferType for BufferTypeElementArray {
     const BUFFER_TYPE: gl::types::GLuint = gl::ELEMENT_ARRAY_BUFFER;
 }
 pub type ElementArrayBuffer = Buffer<BufferTypeElementArray>;
 
+#[derive(Clone)]
 pub struct BufferTypeSSBO;
 impl BufferType for BufferTypeSSBO {
     const BUFFER_TYPE: gl::types::GLuint = gl::SHADER_STORAGE_BUFFER;
@@ -27,33 +30,34 @@ impl ShaderStorageBuffer {
     pub fn bind_buffer_base(&self, index: u32) {
         self.bind();
         unsafe {
-            gl::BindBufferBase(gl::SHADER_STORAGE_BUFFER, index, self.vbo);
+            gl::BindBufferBase(gl::SHADER_STORAGE_BUFFER, index, self.id);
         }
         self.unbind();
     }
 }
 
+#[derive(Clone)]
 pub struct Buffer<B> where B: BufferType {
-    vbo: gl::types::GLuint,
+    pub id: gl::types::GLuint,
     _marker: std::marker::PhantomData<B>,
 }
 
 impl<B> Buffer<B> where B: BufferType {
     pub fn new() -> Buffer<B> {
-        let mut vbo: gl::types::GLuint = 0;
+        let mut id: gl::types::GLuint = 0;
         unsafe {
-            gl::GenBuffers(1, &mut vbo);
+            gl::GenBuffers(1, &mut id);
         }
 
         Buffer {
-            vbo: vbo,
+            id: id,
             _marker: std::marker::PhantomData,
         }
     }
 
     pub fn bind(&self) {
         unsafe {
-            gl::BindBuffer(B::BUFFER_TYPE, self.vbo);
+            gl::BindBuffer(B::BUFFER_TYPE, self.id);
         }
     }
 
@@ -75,6 +79,7 @@ impl<B> Buffer<B> where B: BufferType {
         }
     }
 
+    /// Assumes the buffer is already bound
     pub fn data<T>(&self, data: &[T], usage: gl::types::GLenum) {
         unsafe {
             gl::BufferData(
@@ -86,6 +91,7 @@ impl<B> Buffer<B> where B: BufferType {
         }
     }
 
+    /// Assumes the buffer is already bound
     pub fn sub_data<T>(&self, data: &[T], offset: isize) {
         unsafe {
             gl::BufferSubData(
@@ -101,18 +107,20 @@ impl<B> Buffer<B> where B: BufferType {
 impl<B> Drop for Buffer<B> where B: BufferType {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteBuffers(1, &mut self.vbo);
+            gl::DeleteBuffers(1, &mut self.id);
         }
     }
 }
 
 //TODO: Generic over Vertex?
+#[derive(Clone)]
 pub struct VertexArray {
     vao: gl::types::GLuint,
 }
 
 impl Drop for VertexArray {
     fn drop(&mut self) {
+        trace!("Holy fuck i dropped something");
         unsafe {
             gl::DeleteVertexArrays(1, &mut self.vao);
         }
@@ -142,6 +150,7 @@ impl VertexArray {
         }
     }
 
+    /// Assumes the correct VAO is already bound
     pub fn attrib_pointers(&self) {
         let stride = std::mem::size_of::<Vertex>();
 

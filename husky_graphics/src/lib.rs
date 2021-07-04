@@ -2,12 +2,12 @@
 #[macro_use] extern crate lazy_static;
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+
+use rusttype::Font;
 
 use mlua::prelude::*;
 use mlua::{Table, UserData, UserDataMethods};
 
-pub(crate) mod text_util;
 pub(crate) mod gl_wrapper;
 
 pub mod husky2d;
@@ -18,7 +18,7 @@ pub fn load_gl(gl_context: &glutin::Context<glutin::PossiblyCurrent>) {
 
 #[derive(Clone)]
 pub struct Renderer {
-    pub fonts: HashMap<String, Arc< Mutex<text_util::FontObject> >>,
+    pub fonts: HashMap<String, Font<'static>>,
 
     pub renderer2d: husky2d::Renderer2D,
 }
@@ -29,15 +29,14 @@ impl Renderer {
             gl::Viewport(0, 0, window_size.width as _, window_size.height as _);
         }
 
-        let roboto = glyph_brush::ab_glyph::FontArc::try_from_slice(include_bytes!("../../fonts/RobotoMono-Regular.ttf")).expect("Failed to load font!");
-        let roboto_fontarc = Arc::new( Mutex::new(text_util::FontObject::from_fontarc(roboto) ));
+        let roboto = Font::try_from_bytes(include_bytes!("../../fonts/RobotoMono-Regular.ttf") as &[u8]).expect("Failed to load font!");
         let mut fonts = HashMap::new();
-        fonts.insert("roboto".to_string(), roboto_fontarc);
+        fonts.insert("roboto".to_string(), roboto);
 
         Self {
             fonts: fonts,
 
-            renderer2d: husky2d::Renderer2D::new(window_size, "roboto".to_string()),
+            renderer2d: husky2d::Renderer2D::new("roboto".to_string()),
         }
     }
 
@@ -49,21 +48,16 @@ impl Renderer {
     }
 }
 
-fn get_gfx_table(lua: &Lua) -> Renderer {
-    lua.globals().get::<&str, Table>("husky").expect("Failed to get husky table!").get::<&str, Renderer>("graphics").expect("Failed to get graphics table!")
-}
-
 impl UserData for Renderer {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_function("clear", |lua, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
-            get_gfx_table(lua).clear(r,g,b,a.unwrap_or(1.0));
+        methods.add_method("clear", |_, obj, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
+            obj.clear(r,g,b,a.unwrap_or(1.0));
             Ok(())
         });
 
-        methods.add_function("print", |lua, (text, x,y): (String, f32,f32)| {
-            let mut gfx = get_gfx_table(lua);
-            let mut font = gfx.fonts.get("roboto").unwrap().lock().unwrap();
-            gfx.renderer2d.gfx_print(&mut font, &text, x,y);
+        methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
+            let font = obj.fonts.get("roboto").unwrap();
+            obj.renderer2d.gfx_print(&font, &text, x,y);
             Ok(())
         });
     }

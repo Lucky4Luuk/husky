@@ -1,16 +1,19 @@
-#version 150
+#version 450 core
 
-uniform sampler2D font_tex;
+uniform sampler2D tex;
 
-in vec2 f_tex_pos;
-in vec4 f_color;
+in VS_OUTPUT {
+    vec3 Color;
+    vec2 UV;
+} IN;
 
-out vec4 out_color;
+out vec4 Color;
 
 void main() {
-    float alpha = texture(font_tex, f_tex_pos).r;
-    if (alpha <= 0.0) {
-        discard;
-    }
-    out_color = f_color * vec4(1.0, 1.0, 1.0, alpha);
+    float alpha = texture(tex, IN.UV).r;
+    // if (alpha <= 0.0) {
+    //     discard;
+    // }
+    // Color = vec4(IN.Color, alpha);
+    Color = vec4(1.0);
 }
