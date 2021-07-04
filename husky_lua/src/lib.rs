@@ -1,3 +1,5 @@
+#[macro_use] extern crate log;
+
 use std::ops::{Deref, DerefMut};
 
 use mlua::{Chunk, Table, Function};
@@ -14,11 +16,11 @@ impl LuaProgram {
         Lua::new()
     }
 
-    pub fn from_source(source: &str, window_size: (u32, u32)) -> LuaResult<Self> {
+    pub fn from_source(source: &str) -> LuaResult<Self> {
         let lua = Self::new_lua_env();
         let api_table = lua.create_table()?;
 
-        api_table.set("graphics", Renderer::new(window_size.into()))?;
+        api_table.set("graphics", Renderer::new())?;
         lua.globals().set("husky", api_table)?;
 
         lua.load(source).exec()?;
@@ -26,6 +28,14 @@ impl LuaProgram {
         Ok(Self {
             lua: lua,
         })
+    }
+
+    pub fn on_resize(&self, window_size: (u32, u32)) {
+        trace!("Window resizing! New size: {:?}", window_size);
+        {
+            let mut win_size = husky_graphics::WINDOW_SIZE.lock().unwrap();
+            *win_size = window_size;
+        }
     }
 
     pub fn update(&self, dt_s: f32) {

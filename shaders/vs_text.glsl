@@ -4,6 +4,7 @@ layout (location = 0) in vec3 Position;
 layout (location = 1) in vec2 UV;
 layout (location = 2) in vec4 Color;
 
+uniform mat4 ortho;
 uniform vec2 scale;
 
 out VS_OUTPUT {
@@ -12,8 +13,7 @@ out VS_OUTPUT {
 } OUT;
 
 void main() {
-    // gl_Position = vec4(Position.xy * scale, Position.z, 1.0);
-    gl_Position = vec4(Position, 1.0);
+    gl_Position = ortho * vec4(Position.xy * scale, Position.z, 1.0);
     OUT.Color = Color.xyz;
     OUT.UV = UV;
 }

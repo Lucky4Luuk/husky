@@ -36,13 +36,8 @@ pub struct Vertex {
 #[derive(Clone)]
 pub struct Mesh {
     vert_count: i32,
-    index_count: i32,
-    // vao: GLuint,
-    // vbo: GLuint,
-    // ebo: GLuint,
+    _vbo: ArrayBuffer,
     vao: VertexArray,
-    vbo: ArrayBuffer,
-    ebo: ElementArrayBuffer,
 }
 
 impl Mesh {
@@ -50,33 +45,24 @@ impl Mesh {
     /// x,y,z   - f32, f32, f32
     /// u,v     - f32, f32
     /// r,g,b,a - f32, f32, f32, f32
-    pub fn from_vertices(vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Self {
-        trace!("New mesh!");
+    pub fn from_vertices(vertices: &Vec<Vertex>) -> Self {
         let vcount = vertices.len() as i32;
-        let index_count = indices.len() as i32;
+        let vbo = ArrayBuffer::new();
+        vbo.bind();
+        vbo.static_draw_data(&vertices);
+        vbo.unbind();
 
         let vao = VertexArray::new();
-        let vbo = ArrayBuffer::new();
-        let ebo = ElementArrayBuffer::new();
-
         vao.bind();
-
         vbo.bind();
-        vbo.data(vertices, gl::STATIC_DRAW);
-
-        ebo.bind();
-        ebo.data(vertices, gl::STATIC_DRAW);
-
         vao.attrib_pointers();
-
+        vbo.unbind();
         vao.unbind();
 
         Self {
             vert_count: vcount,
-            index_count: index_count,
+            _vbo: vbo,
             vao: vao,
-            ebo: ebo,
-            vbo: vbo,
         }
     }
 
@@ -84,13 +70,11 @@ impl Mesh {
     pub fn draw(&self) {
         unsafe {
             self.vao.bind();
-            gl::DrawElements(
+            gl::DrawArrays(
                 gl::TRIANGLES, // mode
-                self.index_count, // number of indices to be rendered,
-                gl::UNSIGNED_INT,
-                0 as *const GLvoid,
+                0, // starting index in the enabled arrays
+                self.vert_count // number of indices to be rendered
             );
-            gl_assert_ok!();
             self.vao.unbind();
         }
     }

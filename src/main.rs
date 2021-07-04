@@ -73,7 +73,9 @@ fn main() {
     let path = directory.join(Path::new("main.lua"));
     debug!("Trying to load program from path `{}`", path.display());
     let source = read_to_string(path).unwrap_or(DEFAULT_PROG_SRC.to_string());
-    let program = LuaProgram::from_source(&source, context.window().inner_size().into()).expect("Failed to get program!");
+    let program = LuaProgram::from_source(&source).expect("Failed to get program!");
+    let mut dimensions: (u32, u32) = context.window().inner_size().into();
+    program.on_resize(dimensions);
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -108,6 +110,11 @@ fn main() {
                 let delta = Instant::now() - old_frametime;
                 old_frametime = Instant::now();
                 let delta_s = delta.as_secs() as f32 + (delta.subsec_micros() as f32 / 1_000_000f32);
+
+                if dimensions != context.window().inner_size().into() {
+                    dimensions = context.window().inner_size().into();
+                    program.on_resize(dimensions);
+                }
 
                 program.update(delta_s);
                 program.draw();

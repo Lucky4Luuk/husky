@@ -1,6 +1,6 @@
 #version 450 core
 
-uniform sampler2D tex;
+layout(location = 0) uniform sampler2D tex;
 
 in VS_OUTPUT {
     vec3 Color;
@@ -10,10 +10,13 @@ in VS_OUTPUT {
 layout(location = 0) out vec4 Color;
 
 void main() {
-    // float alpha = texture(tex, IN.UV).r;
-    // if (alpha <= 0.0) {
-    //     discard;
-    // }
-    // Color = vec4(IN.Color, 1.0);
-    Color = vec4(1.0);
+    vec4 data = texture(tex, IN.UV);
+    float alpha = data.a;
+    vec3 col = data.rgb;
+    if (alpha <= 0.0) {
+        discard;
+    }
+    // Color = vec4(IN.Color, alpha);
+    // Color = vec4(1.0);
+    Color = vec4(col, 1.0);
 }

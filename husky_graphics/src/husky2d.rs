@@ -2,6 +2,7 @@ use image::{DynamicImage, Rgba};
 use rusttype::{Font, Scale, point};
 
 use crate::gl_wrapper::gl_types::f32_f32;
+use crate::gl_wrapper::gl_types::Texture;
 use crate::gl_wrapper::mesh::{Vertex, Mesh};
 use crate::gl_wrapper::shader::{Shader, ShaderProgram};
 
@@ -33,23 +34,33 @@ impl Renderer2D {
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
             Vertex {
-                pos: (100.0, 0.0, 0.0).into(),
+                pos: (1.0, 0.0, 0.0).into(),
                 uv: (1.0, 0.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
             Vertex {
-                pos: (100.0, 100.0, 0.0).into(),
+                pos: (1.0, 1.0, 0.0).into(),
                 uv: (1.0, 1.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
+
             Vertex {
-                pos: (0.0, 100.0, 0.0).into(),
+                pos: (0.0, 1.0, 0.0).into(),
                 uv: (0.0, 1.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
+            Vertex {
+                pos: (0.0, 0.0, 0.0).into(),
+                uv: (0.0, 0.0).into(),
+                rgba: (1.0, 1.0, 1.0, 1.0).into(),
+            },
+            Vertex {
+                pos: (1.0, 1.0, 0.0).into(),
+                uv: (1.0, 1.0).into(),
+                rgba: (1.0, 1.0, 1.0, 1.0).into(),
+            },
         ];
-        let font_mesh_indices: Vec<u32> = vec![0,1,2];
-        let font_mesh = Mesh::from_vertices(&font_mesh_verts, &font_mesh_indices);
+        let font_mesh = Mesh::from_vertices(&font_mesh_verts);
 
         Self {
             active_fontobj: active_fontobj,
@@ -59,7 +70,12 @@ impl Renderer2D {
     }
 
     pub fn gfx_print(&self, font: &Font, text: &str, x: f32, y: f32) {
-        let font_size = 18.0; //TODO: Don't hardcode this???? Also copy the line below to wherever you start passing this to calculate it properly
+        let ortho_matrix = {
+            let win_size = crate::WINDOW_SIZE.lock().unwrap();
+            glam::Mat4::orthographic_rh_gl(0.0, win_size.0 as f32, win_size.1 as f32, 0.0, -1.0, 1.0)
+        };
+
+        let font_size = 64.0; //TODO: Don't hardcode this???? Also copy the line below to wherever you start passing this to calculate it properly
         // let scale = (font_size * window_ctx.window().scale_factor() as f32).round();
         let scale = Scale::uniform(font_size);
 
@@ -98,11 +114,17 @@ impl Renderer2D {
             }
         }
 
+        let pixels: Vec<u8> = image.into_raw();
+        let texture = Texture::new((glyphs_width as i32 + 40, glyphs_height as i32 + 40), &pixels, gl::RGBA as i32, gl::RGBA, gl::UNSIGNED_BYTE);
+
         //Render textured quad with the above image
         self.font_program.bind();
-        // self.font_program.uniform("scale", f32_f32::from( (glyphs_width as f32, glyphs_height as f32) ));
-        self.font_program.uniform("scale", f32_f32::from( (80.0, 80.0) ));
+        texture.bind();
+        self.font_program.uniform("ortho", ortho_matrix);
+        self.font_program.uniform("scale", f32_f32::from( (glyphs_width as f32, glyphs_height as f32) ));
+        // self.font_program.uniform("scale", f32_f32::from( (1280.0 / 2.0, 720.0 / 2.0) ));
         self.font_mesh.draw();
+        texture.unbind();
         self.font_program.unbind();
     }
 }
