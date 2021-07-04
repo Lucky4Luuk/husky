@@ -29,29 +29,21 @@ impl LuaProgram {
     }
 
     pub fn update(&self, dt_s: f32) {
-        match self.lua.globals().get::<&str, Table>("husky") {
-            Err(_) => {}, //Husky table doesn't exist
-            Ok(api) => {
-                match api.get::<&str, Function>("update") {
-                    Err(_) => {}, //Update function in husky table doesn't exist
-                    Ok(func) => {
-                        func.call::<_, ()>(dt_s).expect("Failed to call update function!");
-                    }
-                }
+        let globals = self.lua.globals();
+        if globals.contains_key("husky").expect("Somehow failed to check for key in table!") {
+            let api = globals.get::<&str, Table>("husky").unwrap();
+            if api.contains_key("update").expect("Somehow failed to check for key in table!") {
+                api.get::<&str, Function>("update").unwrap().call::<_, ()>(dt_s).expect("Failed to call update function!");
             }
         }
     }
 
     pub fn draw(&self) {
-        match self.lua.globals().get::<&str, Table>("husky") {
-            Err(_) => {}, //Husky table doesn't exist
-            Ok(api) => {
-                match api.get::<&str, Function>("draw") {
-                    Err(_) => {}, //Update function in husky table doesn't exist
-                    Ok(func) => {
-                        func.call::<_, ()>(()).expect("Failed to call update function!");
-                    }
-                }
+        let globals = self.lua.globals();
+        if globals.contains_key("husky").expect("Somehow failed to check for key in table!") {
+            let api = globals.get::<&str, Table>("husky").unwrap();
+            if api.contains_key("draw").expect("Somehow failed to check for key in table!") {
+                api.get::<&str, Function>("draw").unwrap().call::<_, ()>(()).expect("Failed to call draw function!");
             }
         }
     }
