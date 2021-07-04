@@ -25,6 +25,10 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(window_size: glutin::dpi::PhysicalSize<u32>) -> Self {
+        unsafe {
+            gl::Viewport(0, 0, window_size.width as _, window_size.height as _);
+        }
+
         let roboto = glyph_brush::ab_glyph::FontArc::try_from_slice(include_bytes!("../../fonts/RobotoMono-Regular.ttf")).expect("Failed to load font!");
         let roboto_fontarc = Arc::new( Mutex::new(text_util::FontObject::from_fontarc(roboto) ));
         let mut fonts = HashMap::new();

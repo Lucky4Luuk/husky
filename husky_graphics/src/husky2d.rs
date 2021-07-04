@@ -35,7 +35,7 @@ impl Renderer2D {
         let glyph_brush = &mut fontobj.glyph_brush;
         let glyph_texture = &mut fontobj.glyph_texture;
 
-        glyph_brush.queue(Section::default().add_text(text));
+        glyph_brush.queue(Section::default().add_text(text.with_color([0.0, 0.0, 0.0, 1.0]))); //TODO: Don't hardcode this
 
         let mut brush_action;
         loop {
@@ -85,5 +85,9 @@ impl Renderer2D {
         }
 
         self.text_pipe.draw();
+
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
     }
 }

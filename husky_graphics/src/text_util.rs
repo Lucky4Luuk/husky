@@ -124,7 +124,7 @@ impl GlGlyphTexture {
 
     pub fn clear(&self) {
         unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, self.texture.id);
+            self.texture.bind();
             gl::ClearTexImage(
                 self.texture.id,
                 0,
@@ -132,6 +132,7 @@ impl GlGlyphTexture {
                 gl::UNSIGNED_BYTE,
                 [12_u8].as_ptr() as _,
             );
+            self.texture.unbind();
         }
     }
 }
@@ -184,7 +185,8 @@ impl GlTextPipe {
                 ("tex_right_bottom", 2),
                 ("color", 4),
             ] {
-                let attr = gl::GetAttribLocation(program.id, CString::new(*v_field).expect("Failed to create cstring!").as_ptr());
+                let field_cstr = CString::new(*v_field).expect("Failed to create cstring!");
+                let attr = gl::GetAttribLocation(program.id, field_cstr.as_ptr());
                 if attr < 0 {
                     panic!("{}", format!("{} GetAttribLocation -> {}", v_field, attr));
                 }
