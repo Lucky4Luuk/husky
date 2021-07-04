@@ -12,6 +12,7 @@ use glutin::dpi::LogicalSize;
 use glutin::event_loop::{EventLoop, ControlFlow};
 use glutin::event::{Event, WindowEvent, ElementState, KeyboardInput, VirtualKeyCode};
 use glutin::window::WindowBuilder;
+use glutin::{GlProfile, GlRequest, Api};
 
 use husky_lua::LuaProgram;
 
@@ -60,7 +61,7 @@ fn main() {
         .with_title("Husky v0.0.1")
         .with_inner_size(logical_window_size);
 
-    let context = ContextBuilder::new().build_windowed(window_builder, &event_loop).expect("Failed to create opengl context!");
+    let context = ContextBuilder::new().with_vsync(false).with_gl(GlRequest::Specific(Api::OpenGl, (4,5))).with_gl_profile(GlProfile::Core).build_windowed(window_builder, &event_loop).expect("Failed to create opengl context!");
     let context = unsafe { context.make_current().expect("Failed to make context current!") };
 
     husky_graphics::load_gl(&context.context());

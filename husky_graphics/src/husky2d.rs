@@ -33,17 +33,17 @@ impl Renderer2D {
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
             Vertex {
-                pos: (1.0, 0.0, 0.0).into(),
+                pos: (100.0, 0.0, 0.0).into(),
                 uv: (1.0, 0.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
             Vertex {
-                pos: (1.0, 1.0, 0.0).into(),
+                pos: (100.0, 100.0, 0.0).into(),
                 uv: (1.0, 1.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
             Vertex {
-                pos: (0.0, 1.0, 0.0).into(),
+                pos: (0.0, 100.0, 0.0).into(),
                 uv: (0.0, 1.0).into(),
                 rgba: (1.0, 1.0, 1.0, 1.0).into(),
             },
@@ -101,7 +101,7 @@ impl Renderer2D {
         //Render textured quad with the above image
         self.font_program.bind();
         // self.font_program.uniform("scale", f32_f32::from( (glyphs_width as f32, glyphs_height as f32) ));
-        self.font_program.uniform("scale", f32_f32::from( (16.0, 16.0) ));
+        self.font_program.uniform("scale", f32_f32::from( (80.0, 80.0) ));
         self.font_mesh.draw();
         self.font_program.unbind();
     }

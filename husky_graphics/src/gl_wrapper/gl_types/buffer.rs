@@ -120,7 +120,6 @@ pub struct VertexArray {
 
 impl Drop for VertexArray {
     fn drop(&mut self) {
-        trace!("Holy fuck i dropped something");
         unsafe {
             gl::DeleteVertexArrays(1, &mut self.vao);
         }
