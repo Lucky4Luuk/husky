@@ -1,20 +1,14 @@
-use std::sync::Mutex;
+use std::sync::Arc;
 
 use crate::gl_wrapper;
-use crate::text_util::{GlGlyphTexture, GlTextPipe, to_vertex, Vertex};
+use crate::text_util::{FontObject, GlGlyphTexture, GlTextPipe, to_vertex, Vertex};
 
 use glyph_brush::{ab_glyph::*, *};
 
-use mlua::prelude::*;
-use mlua::Table;
-
-pub fn load_husky2d_api(lua: &Lua, api: &Table) -> LuaResult<()> {
-    let gfx_print_func = lua.create_function(|_, (text, x, y): (String, f32, f32)| {
-        gfx_print(&text, x, y);
-        Ok(())
-    })?;
-    api.set("print", gfx_print_func)?;
-    Ok(())
+#[derive(Clone)]
+pub struct Renderer2D {
+    text_pipe: GlTextPipe,
+    active_fontobj: String,
 }
 
 lazy_static! {
@@ -23,39 +17,32 @@ lazy_static! {
         unsafe { gl::GetIntegerv(gl::MAX_TEXTURE_SIZE, &mut value) };
         value as u32
     };
-
-    static ref DEFAULT_FONT: Mutex<GlyphBrush<Vertex>> = {
-        let roboto = FontArc::try_from_slice(include_bytes!("../../fonts/RobotoMono-Regular.ttf")).expect("Failed to load font!");
-        trace!("Loaded default font!");
-        Mutex::new(GlyphBrushBuilder::using_font(roboto).build())
-    };
-
-    static ref DEFAULT_FONT_TEXTURE: Mutex<GlGlyphTexture> = {
-        let tex = GlGlyphTexture::new(DEFAULT_FONT.lock().unwrap().texture_dimensions());
-        trace!("GlGlyphTexture created!");
-        Mutex::new(tex)
-    };
-
-    static ref TEXT_PIPE: Mutex<GlTextPipe> = Mutex::new(GlTextPipe::new(*crate::WINDOW_SIZE.lock().unwrap()));
 }
 
-pub fn gfx_print(text: &str, x: f32, y: f32) {
-    let font_size = 18.0; //TODO: Don't hardcode this???? Also copy the line below to wherever you start passing this to calculate it properly
-    // let scale = (font_size * window_ctx.window().scale_factor() as f32).round();
-    let text = Text::new(&text).with_scale(font_size);
-    {
-        let mut font = DEFAULT_FONT.lock().expect("Failed to acquire lock on font mutex!");
-        let texture: &mut GlGlyphTexture = &mut *DEFAULT_FONT_TEXTURE.lock().unwrap();
+impl Renderer2D {
+    pub fn new(window_size: glutin::dpi::PhysicalSize<u32>, active_fontobj: String) -> Self {
+        Self {
+            text_pipe: GlTextPipe::new(window_size),
+            active_fontobj: active_fontobj,
+        }
+    }
 
-        font.queue(Section::default().add_text(text));
+    pub fn gfx_print(&mut self, fontobj: &mut FontObject, text: &str, x: f32, y: f32) {
+        let font_size = 18.0; //TODO: Don't hardcode this???? Also copy the line below to wherever you start passing this to calculate it properly
+        // let scale = (font_size * window_ctx.window().scale_factor() as f32).round();
+        let text = Text::new(&text).with_scale(font_size);
+
+        let glyph_brush = &mut fontobj.glyph_brush;
+        let glyph_texture = &mut fontobj.glyph_texture;
+
+        glyph_brush.queue(Section::default().add_text(text));
 
         let mut brush_action;
-        trace!("About to enter loop!");
         loop {
-            brush_action = font.process_queued(
+            brush_action = glyph_brush.process_queued(
                 |rect, tex_data| unsafe {
                     // Update part of gpu texture with new glyph alpha values
-                    gl::BindTexture(gl::TEXTURE_2D, texture.texture.id);
+                    gl::BindTexture(gl::TEXTURE_2D, glyph_texture.texture.id);
                     gl::TexSubImage2D(
                         gl::TEXTURE_2D,
                         0,
@@ -76,27 +63,27 @@ pub fn gfx_print(text: &str, x: f32, y: f32) {
                 Err(BrushError::TextureTooSmall { suggested, .. }) => {
                     let (new_width, new_height) = if (suggested.0 > *MAX_IMAGE_DIMENSION
                         || suggested.1 > *MAX_IMAGE_DIMENSION)
-                        && (font.texture_dimensions().0 < *MAX_IMAGE_DIMENSION
-                            || font.texture_dimensions().1 < *MAX_IMAGE_DIMENSION)
+                        && (glyph_brush.texture_dimensions().0 < *MAX_IMAGE_DIMENSION
+                            || glyph_brush.texture_dimensions().1 < *MAX_IMAGE_DIMENSION)
                     {
                         (*MAX_IMAGE_DIMENSION, *MAX_IMAGE_DIMENSION)
                     } else {
                         suggested
                     };
-                    eprint!("\r                            \r");
-                    eprintln!("Resizing glyph texture -> {}x{}", new_width, new_height);
+                    debug!("Resizing glyph texture -> {}x{}", new_width, new_height);
 
                     // Recreate texture as a larger size to fit more
-                    *texture = GlGlyphTexture::new((new_width, new_height));
+                    *glyph_texture = GlGlyphTexture::new((new_width, new_height));
 
-                    font.resize_texture(new_width, new_height);
+                    glyph_brush.resize_texture(new_width, new_height);
                 }
             }
         }
-        trace!("Loop done!");
         match brush_action.unwrap() {
-            BrushAction::Draw(vertices) => TEXT_PIPE.lock().unwrap().upload_vertices(&vertices),
+            BrushAction::Draw(vertices) => self.text_pipe.upload_vertices(&vertices),
             BrushAction::ReDraw => {}
         }
+
+        self.text_pipe.draw();
     }
 }

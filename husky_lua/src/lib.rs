@@ -3,6 +3,8 @@ use std::ops::{Deref, DerefMut};
 use mlua::{Chunk, Table, Function};
 use mlua::prelude::*;
 
+use husky_graphics::Renderer;
+
 pub struct LuaProgram {
     lua: Lua,
 }
@@ -12,16 +14,11 @@ impl LuaProgram {
         Lua::new()
     }
 
-    pub fn from_source<F>(source: &str, api_load: F) -> LuaResult<Self>
-    where
-        F: Fn(&Lua, &Table) -> LuaResult<()>
-    {
+    pub fn from_source(source: &str, window_size: (u32, u32)) -> LuaResult<Self> {
         let lua = Self::new_lua_env();
-
         let api_table = lua.create_table()?;
 
-        api_load(&lua, &api_table)?;
-
+        api_table.set("graphics", Renderer::new(window_size.into()))?;
         lua.globals().set("husky", api_table)?;
 
         lua.load(source).exec()?;

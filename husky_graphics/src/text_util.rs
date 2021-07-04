@@ -8,6 +8,26 @@ use glyph_brush::{ab_glyph::*, *};
 use crate::gl_wrapper::gl_types::Texture;
 use crate::gl_wrapper::shader::{Shader, ShaderProgram};
 
+pub struct FontObject {
+    pub glyph_brush: GlyphBrush<Vertex>,
+    pub glyph_texture: GlGlyphTexture,
+}
+
+impl FontObject {
+    pub fn from_fontarc(fontarc: FontArc) -> Self {
+        let brush = GlyphBrushBuilder::using_font(fontarc).build();
+        let texture = GlGlyphTexture::new(brush.texture_dimensions());
+        Self {
+            glyph_brush: brush,
+            glyph_texture: texture,
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Nerd shit starts here
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 pub type Vertex = [f32; 13];
 
 #[inline]
@@ -116,6 +136,7 @@ impl GlGlyphTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct GlTextPipe {
     program: ShaderProgram,
     vao: GLuint,

@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 log = "*"
 mlua = { version = "0.6.1", features = ["luajit", "vendored"] }
+
+husky_graphics = { path = "../husky_graphics" }

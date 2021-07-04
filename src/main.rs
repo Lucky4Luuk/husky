@@ -15,7 +15,7 @@ use glutin::window::WindowBuilder;
 
 use husky_lua::LuaProgram;
 
-static DEFAULT_WINDOW_SIZE: (u32, u32) = (1920u32, 1080u32);
+static DEFAULT_WINDOW_SIZE: (u32, u32) = (1280u32, 720u32);
 
 static DEFAULT_PROG_SRC: &'static str = include_str!("../default_main.lua");
 
@@ -72,10 +72,7 @@ fn main() {
     let path = directory.join(Path::new("main.lua"));
     debug!("Trying to load program from path `{}`", path.display());
     let source = read_to_string(path).unwrap_or(DEFAULT_PROG_SRC.to_string());
-    let program = LuaProgram::from_source(&source, |lua, api| {
-        husky_graphics::load_api(lua, api)?;
-        Ok(())
-    }).expect("Failed to get program!");
+    let program = LuaProgram::from_source(&source, context.window().inner_size().into()).expect("Failed to get program!");
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -114,7 +111,7 @@ fn main() {
                 program.update(delta_s);
                 program.draw();
 
-                // context.window().set_title(&format!("FPS: {}", 1.0 / delta_s));
+                context.window().set_title(&format!("FPS: {}", 1.0 / delta_s));
 
                 context.swap_buffers().expect("Failed to swap buffers!");
             },

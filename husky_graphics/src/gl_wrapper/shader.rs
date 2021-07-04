@@ -3,6 +3,7 @@ use std::ffi::CString;
 use super::util;
 use super::gl_types::UniformValue;
 
+#[derive(Clone)]
 pub struct Shader {
     pub id: gl::types::GLuint,
 }
@@ -30,6 +31,7 @@ impl Drop for Shader {
     }
 }
 
+#[derive(Clone)]
 pub struct ShaderProgram {
     pub id: gl::types::GLuint,
 }
