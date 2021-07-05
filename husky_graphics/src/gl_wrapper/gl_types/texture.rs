@@ -6,6 +6,7 @@ pub struct Texture {
     pub id: gl::types::GLuint,
     pub format: gl::types::GLint,
     pub internal_format: gl::types::GLuint,
+    pub raw_format: gl::types::GLenum,
     pub size: (i32, i32),
 }
 
@@ -29,7 +30,15 @@ impl Texture {
             id: id,
             format: format,
             internal_format: internal_format,
+            raw_format: raw_format,
             size: size,
+        }
+    }
+
+    /// Assumes the right texture is bound
+    pub fn data(&self, data: &[u8]) {
+        unsafe {
+            gl::TexImage2D(gl::TEXTURE_2D, 0, self.format, self.size.0, self.size.1, 0, self.internal_format, self.raw_format, data.as_ptr() as *const c_void);
         }
     }
 

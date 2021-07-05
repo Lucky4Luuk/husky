@@ -52,10 +52,19 @@ impl Renderer {
             gl::ClearColor(r,g,b,a);
         }
     }
+
+    pub fn finish_frame(&self) {
+        self.renderer2d.finish_frame();
+    }
 }
 
 impl UserData for Renderer {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("finish_frame", |_, obj, ()| {
+            obj.finish_frame();
+            Ok(())
+        });
+
         methods.add_method("clear", |_, obj, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
             obj.clear(r,g,b,a.unwrap_or(1.0));
             Ok(())

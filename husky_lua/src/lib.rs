@@ -21,6 +21,7 @@ impl LuaProgram {
         let api_table = lua.create_table()?;
 
         api_table.set("graphics", Renderer::new())?;
+
         lua.globals().set("husky", api_table)?;
 
         lua.load(source).exec()?;
@@ -46,6 +47,9 @@ impl LuaProgram {
                 api.get::<&str, Function>("update").unwrap().call::<_, ()>(dt_s).expect("Failed to call update function!");
             }
         }
+
+        //Alternative
+        // let _ = self.lua.load("husky.update(0)").exec();
     }
 
     pub fn draw(&self) {
@@ -54,6 +58,7 @@ impl LuaProgram {
             let api = globals.get::<&str, Table>("husky").unwrap();
             if api.contains_key("draw").expect("Somehow failed to check for key in table!") {
                 api.get::<&str, Function>("draw").unwrap().call::<_, ()>(()).expect("Failed to call draw function!");
+                self.lua.load("husky.graphics:finish_frame()").exec().expect("Failed to call `husky.graphics.finish_frame`!");
             }
         }
     }

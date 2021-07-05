@@ -17,6 +17,5 @@ void main() {
         discard;
     }
     // Color = vec4(IN.Color, alpha);
-    // Color = vec4(1.0);
     Color = vec4(col, 1.0);
 }
