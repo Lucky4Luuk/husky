@@ -92,7 +92,6 @@ impl Renderer2D {
             self.font_texture.bind();
             self.font_texture.data(image_lock.as_raw());
             self.font_texture.unbind();
-            // Texture::new((1280, 720), image_lock.as_raw(), gl::RGBA as i32, gl::RGBA, gl::UNSIGNED_BYTE)
         }
 
         //Render textured quad with the above image
