@@ -12,14 +12,6 @@ impl super::Renderer2D {
         let v_metrics = font.v_metrics(scale);
 
         let glyphs: Vec<_> = font.layout(text, scale, point(0f32, v_metrics.ascent)).collect();
-        let glyphs_height = (v_metrics.ascent - v_metrics.descent).ceil() as u32;
-        let glyphs_width = {
-            let max_x = glyphs
-                .last()
-                .map(|g| g.pixel_bounding_box().unwrap().max.x)
-                .unwrap();
-            max_x as u32
-        };
 
         {
             let mut image_lock = self.font_image.lock().unwrap();
