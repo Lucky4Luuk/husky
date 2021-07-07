@@ -78,4 +78,17 @@ impl Mesh {
             self.vao.unbind();
         }
     }
+
+    ///Make sure to bind a shader first!
+    pub fn draw_wireframe(&self) {
+        unsafe {
+            self.vao.bind();
+            gl::DrawArrays(
+                gl::LINES, // mode
+                0, // starting index in the enabled arrays
+                self.vert_count
+            );
+            self.vao.unbind();
+        }
+    }
 }

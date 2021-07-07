@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use image::{DynamicImage, RgbaImage};
 
 mod text;
+mod primitive;
 
 use crate::gl_wrapper::gl_types::f32_f32;
 use crate::gl_wrapper::gl_types::Texture;
