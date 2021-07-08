@@ -5,6 +5,8 @@ use image::{DynamicImage, RgbaImage};
 mod text;
 mod primitive;
 
+pub use primitive::Drawmode2D;
+
 use crate::gl_wrapper::gl_types::f32_f32;
 use crate::gl_wrapper::gl_types::Texture;
 use crate::gl_wrapper::mesh::{Vertex, Mesh};

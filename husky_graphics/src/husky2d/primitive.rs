@@ -1,8 +1,6 @@
 use glam::*;
 
 use crate::gl_wrapper::mesh::{Vertex, Mesh};
-use crate::gl_wrapper::shader::ShaderProgram;
-
 
 lazy_static! {
     static ref RECTANGLE_VERTICES: Vec<Vertex> = vec![
@@ -46,6 +44,17 @@ lazy_static! {
 pub enum Drawmode2D {
     Lines,
     Filled,
+    Unknown
+}
+
+impl Drawmode2D {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "fill" => Self::Filled,
+            "line" => Self::Lines,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 impl super::Renderer2D {
@@ -59,6 +68,7 @@ impl super::Renderer2D {
         match mode {
             Drawmode2D::Filled => RECTANGLE.draw(),
             Drawmode2D::Lines => RECTANGLE.draw_wireframe(),
+            _ => panic!("Unsupported drawmode!"),
         }
     }
 }

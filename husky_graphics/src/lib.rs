@@ -75,5 +75,11 @@ impl UserData for Renderer {
             obj.renderer2d.lock().unwrap().gfx_print(&font, &text, x,y);
             Ok(())
         });
+
+        methods.add_method("rect", |_, obj, (mode_raw, x,y, w,h): (String, f32,f32, f32,f32)| {
+            let mode = husky2d::Drawmode2D::from_str(&mode_raw);
+            obj.renderer2d.lock().unwrap().rect(mode, x,y, w,h);
+            Ok(())
+        });
     }
 }
