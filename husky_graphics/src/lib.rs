@@ -2,7 +2,7 @@
 #[macro_use] extern crate lazy_static;
 
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use rusttype::Font;
 
@@ -25,7 +25,7 @@ lazy_static! {
 pub struct Renderer {
     pub fonts: HashMap<String, Font<'static>>,
 
-    pub renderer2d: husky2d::Renderer2D,
+    pub renderer2d: Arc<Mutex<husky2d::Renderer2D>>,
 }
 
 impl Renderer {
@@ -37,7 +37,7 @@ impl Renderer {
         Self {
             fonts: fonts,
 
-            renderer2d: husky2d::Renderer2D::new("roboto".to_string()),
+            renderer2d: Arc::new( Mutex::new(husky2d::Renderer2D::new("roboto".to_string())) ),
         }
     }
 
@@ -54,7 +54,7 @@ impl Renderer {
     }
 
     pub fn finish_frame(&self) {
-        self.renderer2d.finish_frame();
+        self.renderer2d.lock().unwrap().finish_frame();
     }
 }
 
@@ -72,7 +72,7 @@ impl UserData for Renderer {
 
         methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
             let font = obj.fonts.get("roboto").unwrap();
-            obj.renderer2d.gfx_print(&font, &text, x,y);
+            obj.renderer2d.lock().unwrap().gfx_print(&font, &text, x,y);
             Ok(())
         });
     }

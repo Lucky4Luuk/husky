@@ -13,6 +13,16 @@ use crate::gl_wrapper::shader::{Shader, ShaderProgram};
 #[derive(Clone)]
 pub struct Renderer2D {
     active_fontobj: String,
+
+    ///Lets us know if the shader is actually already bound
+    is_default_shader_bound: bool,
+    ///Lets us know if the shader is actually already bound
+    is_shader_bound: bool,
+
+    default_shader: ShaderProgram,
+    active_shader: Option<ShaderProgram>,
+
+    //TODO: Abstract to text.rs
     font_program: ShaderProgram,
     font_mesh: Mesh,
     font_image: Arc<Mutex<RgbaImage>>,
@@ -71,8 +81,18 @@ impl Renderer2D {
         let image = DynamicImage::new_rgba8(1280, 720).to_rgba8();
         let texture = Texture::from_ptr((1280, 720), std::ptr::null(), gl::RGBA as i32, gl::RGBA, gl::UNSIGNED_BYTE);
 
+        let default_shader_vs = Shader::from_source(include_str!("../../../shaders/default_vs.glsl"), gl::VERTEX_SHADER).expect("Failed to compile default vs shader!");
+        let default_shader_fs = Shader::from_source(include_str!("../../../shaders/default_fs.glsl"), gl::FRAGMENT_SHADER).expect("Failed to compile default fs shader!");
+        let default_shader = ShaderProgram::from_shaders(vec![&default_shader_vs, &default_shader_fs]);
+
         Self {
             active_fontobj: active_fontobj,
+
+            is_default_shader_bound: false,
+            is_shader_bound: false,
+            default_shader: default_shader,
+            active_shader: None,
+
             font_program: font_program,
             font_mesh: font_mesh,
             font_image: Arc::new(Mutex::new(image)),
@@ -80,7 +100,21 @@ impl Renderer2D {
         }
     }
 
-    pub fn finish_frame(&self) {
+    pub fn finish_frame(&mut self) {
+        if self.is_default_shader_bound {
+            self.default_shader.unbind();
+            self.is_default_shader_bound = false;
+        }
+        if self.is_shader_bound {
+            match &self.active_shader {
+                Some(shader) => {
+                    shader.unbind();
+                    self.is_shader_bound = false;
+                },
+                None => panic!("Shader bound but not in memory!")
+            }
+        }
+
         let win_size: (u32, u32) = {
             let raw_win_size = crate::WINDOW_SIZE.lock().unwrap();
             (raw_win_size.0, raw_win_size.1)
@@ -104,5 +138,24 @@ impl Renderer2D {
         self.font_mesh.draw();
         self.font_texture.unbind();
         self.font_program.unbind();
+    }
+
+    fn get_active_shader(&mut self) -> &ShaderProgram {
+        if self.is_default_shader_bound { return &self.default_shader; }
+        if self.is_shader_bound { return self.active_shader.as_ref().unwrap(); }
+
+        //No shader is already bound, so we have to figure out which one to bind
+        match &self.active_shader {
+            Some(shader) => {
+                self.is_shader_bound = true;
+                shader.bind();
+                shader
+            }
+            None => {
+                self.default_shader.bind();
+                self.is_default_shader_bound = true;
+                &self.default_shader
+            }
+        }
     }
 }
