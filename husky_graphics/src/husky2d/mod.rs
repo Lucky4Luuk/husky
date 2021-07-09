@@ -29,6 +29,7 @@ pub struct Renderer2D {
     font_mesh: Mesh,
     font_image: Arc<Mutex<RgbaImage>>,
     font_texture: Texture,
+    print_count: u32,
 }
 
 lazy_static! {
@@ -99,6 +100,7 @@ impl Renderer2D {
             font_mesh: font_mesh,
             font_image: Arc::new(Mutex::new(image)),
             font_texture: texture,
+            print_count: 0,
         }
     }
 
@@ -117,29 +119,33 @@ impl Renderer2D {
             }
         }
 
-        let win_size: (u32, u32) = {
-            let raw_win_size = crate::WINDOW_SIZE.lock().unwrap();
-            (raw_win_size.0, raw_win_size.1)
-        };
+        if self.print_count > 0 {
+            let win_size: (u32, u32) = {
+                let raw_win_size = crate::WINDOW_SIZE.lock().unwrap();
+                (raw_win_size.0, raw_win_size.1)
+            };
 
-        let ortho_matrix = glam::Mat4::orthographic_rh_gl(0.0, win_size.0 as f32, win_size.1 as f32, 0.0, -1.0, 1.0);
+            let ortho_matrix = glam::Mat4::orthographic_rh_gl(0.0, win_size.0 as f32, win_size.1 as f32, 0.0, -1.0, 1.0);
 
-        {
-            let image_lock = self.font_image.lock().unwrap();
+            {
+                let image_lock = self.font_image.lock().unwrap();
+                self.font_texture.bind();
+                self.font_texture.data(image_lock.as_raw());
+                self.font_texture.unbind();
+            }
+
+            //Render textured quad with the above image
+            self.font_program.bind();
             self.font_texture.bind();
-            self.font_texture.data(image_lock.as_raw());
+            self.font_program.uniform("offset", f32_f32::from((0f32, 0f32)));
+            self.font_program.uniform("ortho", ortho_matrix);
+            self.font_program.uniform("scale", f32_f32::from( (win_size.0 as f32, win_size.1 as f32) ));
+            self.font_mesh.draw();
             self.font_texture.unbind();
-        }
+            self.font_program.unbind();
 
-        //Render textured quad with the above image
-        self.font_program.bind();
-        self.font_texture.bind();
-        self.font_program.uniform("offset", f32_f32::from((0f32, 0f32)));
-        self.font_program.uniform("ortho", ortho_matrix);
-        self.font_program.uniform("scale", f32_f32::from( (win_size.0 as f32, win_size.1 as f32) ));
-        self.font_mesh.draw();
-        self.font_texture.unbind();
-        self.font_program.unbind();
+            self.print_count = 0;
+        }
     }
 
     fn get_active_shader(&mut self) -> &ShaderProgram {
