@@ -2,12 +2,12 @@ use image::Rgba;
 use rusttype::{Font, Scale, point};
 
 impl super::Renderer2D {
-    pub fn gfx_print(&self, font: &Font, text: &str, xoff: f32, yoff: f32) {
+    pub fn gfx_print(&self, color: (f32, f32, f32, f32), font: &Font, text: &str, xoff: f32, yoff: f32) {
         let font_size = 24.0; //TODO: Don't hardcode this???? Also copy the line below to wherever you start passing this to calculate it properly
         // let scale = (font_size * window_ctx.window().scale_factor() as f32).round();
         let scale = Scale::uniform(font_size);
 
-        let font_colour = (255, 255, 255);
+        let font_colour = ((color.0 * 255.0) as u8, (color.1 * 255.0) as u8, (color.2 * 255.0) as u8);
 
         let v_metrics = font.v_metrics(scale);
 

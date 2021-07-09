@@ -5,8 +5,10 @@ in VS_OUTPUT {
     vec2 UV;
 } IN;
 
+uniform vec4 drawColor;
+
 layout (location = 0) out vec4 Color;
 
 void main() {
-    Color = vec4(IN.Color, 1.0);
+    Color = vec4(IN.Color, 1.0) * drawColor;
 }

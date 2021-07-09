@@ -26,6 +26,8 @@ pub struct Renderer {
     pub fonts: HashMap<String, Font<'static>>,
 
     pub renderer2d: Arc<Mutex<husky2d::Renderer2D>>,
+
+    pub active_color: Arc<Mutex<(f32, f32, f32, f32)>>,
 }
 
 impl Renderer {
@@ -38,11 +40,14 @@ impl Renderer {
             fonts: fonts,
 
             renderer2d: Arc::new( Mutex::new(husky2d::Renderer2D::new("roboto".to_string())) ),
+
+            active_color: Arc::new( Mutex::new( (1.0, 1.0, 1.0, 1.0) ) )
         }
     }
 
     pub fn clear(&self, r: f32, g: f32, b: f32, a: f32) {
         unsafe {
+            //TODO: This shouldn't be in clear. This needs to be done at the start of each frame
             {
                 let win_size = WINDOW_SIZE.lock().unwrap();
                 gl::Viewport(0,0, win_size.0 as i32, win_size.1 as i32);
@@ -51,6 +56,11 @@ impl Renderer {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(r,g,b,a);
         }
+    }
+
+    pub fn set_color(&self, r: f32, g: f32, b: f32, a: f32) {
+        let mut lock = self.active_color.lock().unwrap();
+        *lock = (r,g,b,a);
     }
 
     pub fn finish_frame(&self) {
@@ -70,15 +80,27 @@ impl UserData for Renderer {
             Ok(())
         });
 
+        methods.add_method("setColor", |_, obj, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
+            obj.set_color(r,g,b,a.unwrap_or(1.0));
+            Ok(())
+        });
+
         methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
             let font = obj.fonts.get("roboto").unwrap();
-            obj.renderer2d.lock().unwrap().gfx_print(&font, &text, x,y);
+            let color = *obj.active_color.lock().unwrap();
+            obj.renderer2d.lock().unwrap().gfx_print(color, &font, &text, x,y);
             Ok(())
         });
 
         methods.add_method("rect", |_, obj, (mode_raw, x,y, w,h): (String, f32,f32, f32,f32)| {
+            let win_size = *WINDOW_SIZE.lock().unwrap();
             let mode = husky2d::Drawmode2D::from_str(&mode_raw);
-            obj.renderer2d.lock().unwrap().rect(mode, x,y, w,h);
+            let draw_x = (x / win_size.0 as f32) * 2.0 - 1.0;
+            let draw_y = (y / win_size.1 as f32) * 2.0 - 1.0;
+            let draw_w = (w / win_size.0 as f32) * 2.0;
+            let draw_h = (h / win_size.1 as f32) * 2.0;
+            let color = *obj.active_color.lock().unwrap();
+            obj.renderer2d.lock().unwrap().rect(color, mode, draw_x,draw_y, draw_w,draw_h);
             Ok(())
         });
     }

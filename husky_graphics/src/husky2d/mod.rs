@@ -152,7 +152,7 @@ impl Renderer2D {
                 self.is_shader_bound = true;
                 shader.bind();
                 shader
-            }
+            },
             None => {
                 self.default_shader.bind();
                 self.is_default_shader_bound = true;

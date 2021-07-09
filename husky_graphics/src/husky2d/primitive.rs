@@ -1,5 +1,6 @@
 use glam::*;
 
+use crate::gl_wrapper::gl_types::f32_f32_f32_f32;
 use crate::gl_wrapper::mesh::{Vertex, Mesh};
 
 lazy_static! {
@@ -58,13 +59,14 @@ impl Drawmode2D {
 }
 
 impl super::Renderer2D {
-    pub fn rect(&mut self, mode: Drawmode2D, x: f32, y: f32, w: f32, h: f32) {
+    pub fn rect(&mut self, color: (f32, f32, f32, f32), mode: Drawmode2D, x: f32, y: f32, w: f32, h: f32) {
         let scale = vec3(w,h,1f32);
         let translation = vec3(x,y,1f32);
         let model = Mat4::from_scale_rotation_translation(scale, Quat::IDENTITY, translation);
 
         let shader = self.get_active_shader();
-        shader.uniform("model", model);
+        shader.uniform("mvp", model);
+        shader.uniform("drawColor", f32_f32_f32_f32::from(color));
         match mode {
             Drawmode2D::Filled => RECTANGLE.draw(),
             Drawmode2D::Lines => RECTANGLE.draw_wireframe(),

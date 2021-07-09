@@ -12,7 +12,8 @@ out VS_OUTPUT {
 } OUT;
 
 void main() {
-    gl_Position = mvp * vec4(Position, 1.0);
+    vec4 pos = mvp * vec4(Position, 1.0);
+    gl_Position = pos;
     OUT.Color = Color.xyz;
     OUT.UV = UV;
 }

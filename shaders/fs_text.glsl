@@ -7,12 +7,14 @@ in VS_OUTPUT {
     vec2 UV;
 } IN;
 
+uniform vec4 drawColor;
+
 layout(location = 0) out vec4 Color;
 
 void main() {
     vec4 data = texture(tex, IN.UV);
     float alpha = data.a;
-    vec3 col = data.rgb;
+    vec3 col = data.rgb * drawColor.rgb;
     if (alpha <= 0.0) {
         discard;
     }
