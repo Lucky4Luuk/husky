@@ -2,6 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use image::{DynamicImage, RgbaImage};
 
+use mlua::UserDataMethods;
+
 mod text;
 mod primitive;
 
@@ -11,6 +13,10 @@ use crate::gl_wrapper::gl_types::f32_f32;
 use crate::gl_wrapper::gl_types::Texture;
 use crate::gl_wrapper::mesh::{Vertex, Mesh};
 use crate::gl_wrapper::shader::{Shader, ShaderProgram};
+
+pub fn add_methods<'lua, M: UserDataMethods<'lua, crate::Renderer>>(methods: &mut M) {
+    primitive::add_methods(methods);
+}
 
 #[derive(Clone)]
 pub struct Renderer2D {

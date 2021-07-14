@@ -13,6 +13,9 @@ pub(crate) mod gl_wrapper;
 
 pub mod husky2d;
 
+mod shader_wrapper;
+pub use shader_wrapper::Shader;
+
 pub fn load_gl(gl_context: &glutin::Context<glutin::PossiblyCurrent>) {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 }
@@ -85,6 +88,11 @@ impl UserData for Renderer {
             Ok(())
         });
 
+        methods.add_method("getSize", |_, _obj, ()| {
+            let win_size = *WINDOW_SIZE.lock().unwrap();
+            Ok(win_size)
+        });
+
         methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
             let font = obj.fonts.get("roboto").unwrap();
             let color = *obj.active_color.lock().unwrap();
@@ -92,16 +100,6 @@ impl UserData for Renderer {
             Ok(())
         });
 
-        methods.add_method("rect", |_, obj, (mode_raw, x,y, w,h): (String, f32,f32, f32,f32)| {
-            let win_size = *WINDOW_SIZE.lock().unwrap();
-            let mode = husky2d::Drawmode2D::from_str(&mode_raw);
-            let draw_x = (x / win_size.0 as f32) * 2.0 - 1.0;
-            let draw_y = (y / win_size.1 as f32) * 2.0 - 1.0;
-            let draw_w = (w / win_size.0 as f32) * 2.0;
-            let draw_h = (h / win_size.1 as f32) * 2.0;
-            let color = *obj.active_color.lock().unwrap();
-            obj.renderer2d.lock().unwrap().rect(color, mode, draw_x,draw_y, draw_w,draw_h);
-            Ok(())
-        });
+        husky2d::add_methods(methods);
     }
 }
