@@ -39,3 +39,10 @@ impl UniformValue for u32 {
         unsafe { gl::Uniform1ui(loc, *self); }
     }
 }
+
+impl UniformValue for bool {
+    fn update(&self, shader: &ShaderProgram, name: &CString) {
+        let loc = unsafe { gl::GetUniformLocation(shader.id, name.as_ptr()) };
+        unsafe { gl::Uniform1i(loc, *self as i32); }
+    }
+}
