@@ -35,9 +35,11 @@ pub struct Renderer {
 
     pub active_color: (f32, f32, f32, f32),
 
-    ///Lets us know if the shader is actually already bound
+    ///Lets us know if the shader is actually already bound.
+    //This is probably redundant to store, but I usually code at 3 am
+    //so I can't think if it is or not.
     is_default_shader_bound: bool,
-    ///Lets us know if the shader is actually already bound
+    ///Lets us know if the shader is actually already bound.
     is_shader_bound: bool,
     pub default_shader: Shader,
     pub active_shader: Option<Shader>,
@@ -68,8 +70,21 @@ impl Renderer {
         }
     }
 
-    fn set_active_shader(&mut self, shader: Option<Shader>) {
-        todo!();
+    fn set_active_shader(&mut self, shader_opt: Option<Shader>) {
+        match shader_opt {
+            Some(shader) => {
+                shader.raw_program.bind();
+                self.active_shader = Some(shader);
+                self.is_shader_bound = true;
+                self.is_default_shader_bound = false;
+            },
+            None => {
+                self.default_shader.raw_program.bind();
+                self.active_shader = None;
+                self.is_shader_bound = false;
+                self.is_default_shader_bound = true;
+            }
+        }
     }
 
     fn get_active_shader(&mut self) -> &Shader {
@@ -119,6 +134,7 @@ impl Renderer {
             match &self.active_shader {
                 Some(shader) => {
                     shader.raw_program.unbind();
+                    self.active_shader = None;
                     self.is_shader_bound = false;
                 },
                 None => panic!("Shader bound but not in memory!")

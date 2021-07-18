@@ -14,6 +14,6 @@ function husky.draw()
 
 	husky.graphics:setColor(0.75, 0.45, 0.3)
 	husky.graphics:rect("fill", winSizeX / 4 - size / 2, winSizeY / 2 - size / 2, size, size)
-    husky.graphics:setShader(shader)
+	husky.graphics:setShader(shader)
 	husky.graphics:rect("fill", winSizeX / 4 * 3 - size / 2, winSizeY / 2 - size / 2, size, size)
 end

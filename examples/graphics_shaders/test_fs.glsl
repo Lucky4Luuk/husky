@@ -10,5 +10,5 @@ uniform vec4 drawColor;
 layout (location = 0) out vec4 Color;
 
 void main() {
-    Color = vec4(IN.Color.zyx, 1.0) * drawColor;
+    Color = vec4(IN.Color.xyz, 1.0) * drawColor.bgra;
 }
