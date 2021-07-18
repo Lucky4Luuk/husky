@@ -27,6 +27,7 @@ fn main() {
     opts.optflag("h", "help", "prints this help menu");
     let empty = Vec::new();
     let opts_passed = if args.len() > 2 { &args[2..] } else { &empty[..] };
+    //TODO: Do something with this to create a proper CLI
     let matches = match opts.parse(opts_passed) {
         Ok(m) => m,
         Err(f) => panic!("{}", f)
@@ -73,7 +74,7 @@ fn main() {
     let path = directory.join(Path::new("main.lua"));
     debug!("Trying to load program from path `{}`", path.display());
     let source = read_to_string(path).unwrap_or(DEFAULT_PROG_SRC.to_string());
-    let program = LuaProgram::from_source(&source).expect("Failed to get program!");
+    let program = LuaProgram::from_source(directory.display().to_string(), &source).expect("Failed to get program!");
     let mut dimensions: (u32, u32) = context.window().inner_size().into();
     program.on_resize(dimensions);
 

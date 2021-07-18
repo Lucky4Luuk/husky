@@ -5,10 +5,11 @@ use std::ops::{Deref, DerefMut};
 use mlua::{Chunk, Table, Function};
 use mlua::prelude::*;
 
-use husky_graphics::Renderer;
+use husky_graphics::RendererGuard;
 
 pub struct LuaProgram {
     lua: Lua,
+    working_directory: String,
 }
 
 impl LuaProgram {
@@ -16,11 +17,11 @@ impl LuaProgram {
         Lua::new()
     }
 
-    pub fn from_source(source: &str) -> LuaResult<Self> {
+    pub fn from_source(working_directory: String, source: &str) -> LuaResult<Self> {
         let lua = Self::new_lua_env();
         let api_table = lua.create_table()?;
 
-        api_table.set("graphics", Renderer::new())?;
+        api_table.set("graphics", RendererGuard::new(working_directory.clone()))?;
 
         lua.globals().set("husky", api_table)?;
 
@@ -28,6 +29,7 @@ impl LuaProgram {
 
         Ok(Self {
             lua: lua,
+            working_directory: working_directory
         })
     }
 
@@ -57,6 +59,7 @@ impl LuaProgram {
         if globals.contains_key("husky").expect("Somehow failed to check for key in table!") {
             let api = globals.get::<&str, Table>("husky").unwrap();
             if api.contains_key("draw").expect("Somehow failed to check for key in table!") {
+                self.lua.load("husky.graphics:begin_frame()").exec().expect("Failed to call `husky.graphics.begin_frame`!");
                 api.get::<&str, Function>("draw").unwrap().call::<_, ()>(()).expect("Failed to call draw function!");
                 self.lua.load("husky.graphics:finish_frame()").exec().expect("Failed to call `husky.graphics.finish_frame`!");
             }

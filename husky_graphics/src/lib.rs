@@ -1,6 +1,8 @@
 #[macro_use] extern crate log;
 #[macro_use] extern crate lazy_static;
 
+use std::sync::MutexGuard;
+use std::sync::atomic::{Ordering, AtomicBool};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -10,6 +12,7 @@ use mlua::prelude::*;
 use mlua::{Table, UserData, UserDataMethods};
 
 pub(crate) mod gl_wrapper;
+use gl_wrapper::shader::Shader as GlShader;
 
 pub mod husky2d;
 
@@ -24,67 +27,143 @@ lazy_static! {
     pub static ref WINDOW_SIZE: Mutex<(u32, u32)> = Mutex::new((1,1));
 }
 
-#[derive(Clone)]
 pub struct Renderer {
     pub fonts: HashMap<String, Font<'static>>,
+    pub working_directory: String,
 
-    pub renderer2d: Arc<Mutex<husky2d::Renderer2D>>,
+    pub renderer2d: husky2d::Renderer2D,
 
-    pub active_color: Arc<Mutex<(f32, f32, f32, f32)>>,
+    pub active_color: (f32, f32, f32, f32),
+
+    ///Lets us know if the shader is actually already bound
+    is_default_shader_bound: bool,
+    ///Lets us know if the shader is actually already bound
+    is_shader_bound: bool,
+    pub default_shader: Shader,
+    pub active_shader: Option<Shader>,
 }
 
 impl Renderer {
-    pub fn new() -> Self {
+    pub fn new(working_directory: String) -> Self {
         let roboto = Font::try_from_bytes(include_bytes!("../../fonts/RobotoMono-Regular.ttf") as &[u8]).expect("Failed to load font!");
         let mut fonts = HashMap::new();
         fonts.insert("roboto".to_string(), roboto);
 
+        let default_shader_vs = GlShader::from_source(include_str!("../../shaders/default_vs.glsl"), gl::VERTEX_SHADER).expect("Failed to compile default vs shader!");
+        let default_shader_fs = GlShader::from_source(include_str!("../../shaders/default_fs.glsl"), gl::FRAGMENT_SHADER).expect("Failed to compile default fs shader!");
+        let default_shader = Shader::from_shaders(vec![&default_shader_vs, &default_shader_fs]);
+
         Self {
             fonts: fonts,
+            working_directory: working_directory,
 
-            renderer2d: Arc::new( Mutex::new(husky2d::Renderer2D::new("roboto".to_string())) ),
+            renderer2d: husky2d::Renderer2D::new("roboto".to_string()),
 
-            active_color: Arc::new( Mutex::new( (1.0, 1.0, 1.0, 1.0) ) )
+            active_color: (1.0, 1.0, 1.0, 1.0),
+
+            is_default_shader_bound: false,
+            is_shader_bound: false,
+            default_shader: default_shader,
+            active_shader: None,
+        }
+    }
+
+    fn set_active_shader(&mut self, shader: Option<Shader>) {
+        todo!();
+    }
+
+    fn get_active_shader(&mut self) -> &Shader {
+        if self.is_default_shader_bound { return &self.default_shader; }
+        if self.is_shader_bound { return self.active_shader.as_ref().unwrap(); }
+
+        //No shader is already bound, so we have to figure out which one to bind
+        match &self.active_shader {
+            Some(shader) => {
+                self.is_shader_bound = true;
+                shader.raw_program.bind();
+                shader
+            },
+            None => {
+                self.default_shader.raw_program.bind();
+                self.is_default_shader_bound = true;
+                &self.default_shader
+            }
         }
     }
 
     pub fn clear(&self, r: f32, g: f32, b: f32, a: f32) {
         unsafe {
-            //TODO: This shouldn't be in clear. This needs to be done at the start of each frame
-            {
-                let win_size = WINDOW_SIZE.lock().unwrap();
-                gl::Viewport(0,0, win_size.0 as i32, win_size.1 as i32);
-            }
-
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(r,g,b,a);
         }
     }
 
-    pub fn set_color(&self, r: f32, g: f32, b: f32, a: f32) {
-        let mut lock = self.active_color.lock().unwrap();
-        *lock = (r,g,b,a);
+    pub fn set_color(&mut self, r: f32, g: f32, b: f32, a: f32) {
+        self.active_color = (r,g,b,a);
     }
 
-    pub fn finish_frame(&self) {
-        self.renderer2d.lock().unwrap().finish_frame();
+    pub fn begin_frame(&self) {
+        unsafe {
+            let win_size = WINDOW_SIZE.lock().unwrap();
+            gl::Viewport(0,0, win_size.0 as i32, win_size.1 as i32);
+        }
+    }
+
+    pub fn finish_frame(&mut self) {
+        //TODO: Start using your own setShader functions, to avoid code repetition
+        if self.is_default_shader_bound {
+            self.default_shader.raw_program.unbind();
+            self.is_default_shader_bound = false;
+        }
+        if self.is_shader_bound {
+            match &self.active_shader {
+                Some(shader) => {
+                    shader.raw_program.unbind();
+                    self.is_shader_bound = false;
+                },
+                None => panic!("Shader bound but not in memory!")
+            }
+        }
+
+        self.renderer2d.finish_frame();
     }
 }
 
-impl UserData for Renderer {
+#[derive(Clone)]
+pub struct RendererGuard {
+    renderer: Arc<Mutex<Renderer>>
+}
+
+impl RendererGuard {
+    pub fn new(working_directory: String) -> Self {
+        Self {
+            renderer: Arc::new(Mutex::new(Renderer::new(working_directory)))
+        }
+    }
+
+    pub fn get_lock(&self) -> MutexGuard<Renderer> {
+        self.renderer.lock().expect("Failed to acquire lock on renderer!")
+    }
+}
+
+impl UserData for RendererGuard {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("begin_frame", |_, obj, ()| {
+            obj.get_lock().begin_frame();
+            Ok(())
+        });
         methods.add_method("finish_frame", |_, obj, ()| {
-            obj.finish_frame();
+            obj.get_lock().finish_frame();
             Ok(())
         });
 
         methods.add_method("clear", |_, obj, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
-            obj.clear(r,g,b,a.unwrap_or(1.0));
+            obj.get_lock().clear(r,g,b,a.unwrap_or(1.0));
             Ok(())
         });
 
         methods.add_method("setColor", |_, obj, (r,g,b,a): (f32, f32, f32, Option<f32>)| {
-            obj.set_color(r,g,b,a.unwrap_or(1.0));
+            obj.get_lock().set_color(r,g,b,a.unwrap_or(1.0));
             Ok(())
         });
 
@@ -94,12 +173,14 @@ impl UserData for Renderer {
         });
 
         methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
-            let font = obj.fonts.get("roboto").unwrap();
-            let color = *obj.active_color.lock().unwrap();
-            obj.renderer2d.lock().unwrap().gfx_print(color, &font, &text, x,y);
+            let mut renderer = obj.get_lock();
+            let font = renderer.fonts.get("roboto").unwrap().clone();
+            let color = renderer.active_color;
+            renderer.renderer2d.gfx_print(color, &font, &text, x,y);
             Ok(())
         });
 
+        shader_wrapper::add_methods(methods);
         husky2d::add_methods(methods);
     }
 }
