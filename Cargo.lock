@@ -609,6 +609,7 @@ dependencies = [
  "glutin",
  "husky_graphics",
  "husky_lua",
+ "husky_voxel",
  "log",
  "pretty_env_logger",
 ]
@@ -635,6 +636,10 @@ dependencies = [
  "log",
  "mlua",
 ]
+
+[[package]]
+name = "husky_voxel"
+version = "0.1.0"
 
 [[package]]
 name = "ident_case"
