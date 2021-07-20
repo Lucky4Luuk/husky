@@ -3,6 +3,8 @@ local winSizeY = 1
 
 -- local shader = husky.graphics:newShader("voxel_raytrace.glsl")
 
+local scene = husky.voxel:newScene()
+
 function husky.draw()
 	husky.graphics:clear(0.5, 0.2, 0.35)
 

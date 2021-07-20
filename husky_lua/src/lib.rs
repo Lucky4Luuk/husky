@@ -6,6 +6,7 @@ use mlua::{Chunk, Table, Function};
 use mlua::prelude::*;
 
 use husky_graphics::RendererGuard;
+use husky_voxel::VoxelInterface;
 
 pub struct LuaProgram {
     lua: Lua,
@@ -22,6 +23,7 @@ impl LuaProgram {
         let api_table = lua.create_table()?;
 
         api_table.set("graphics", RendererGuard::new(working_directory.clone()))?;
+        api_table.set("voxel", VoxelInterface::new())?;
 
         lua.globals().set("husky", api_table)?;
 

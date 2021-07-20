@@ -621,6 +621,7 @@ dependencies = [
  "gl",
  "glam",
  "glutin",
+ "husky_voxel",
  "image",
  "lazy_static",
  "log",
@@ -633,6 +634,7 @@ name = "husky_lua"
 version = "0.1.0"
 dependencies = [
  "husky_graphics",
+ "husky_voxel",
  "log",
  "mlua",
 ]
@@ -640,6 +642,10 @@ dependencies = [
 [[package]]
 name = "husky_voxel"
 version = "0.1.0"
+dependencies = [
+ "log",
+ "mlua",
+]
 
 [[package]]
 name = "ident_case"

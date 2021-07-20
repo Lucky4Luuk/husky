@@ -15,6 +15,7 @@ pub(crate) mod gl_wrapper;
 use gl_wrapper::shader::Shader as GlShader;
 
 pub mod husky2d;
+pub mod husky3d;
 
 mod shader_wrapper;
 pub use shader_wrapper::Shader;
@@ -32,6 +33,7 @@ pub struct Renderer {
     pub working_directory: String,
 
     pub renderer2d: husky2d::Renderer2D,
+    pub voxel_renderer: husky3d::voxel::VoxelRenderer,
 
     pub active_color: (f32, f32, f32, f32),
 
@@ -60,6 +62,7 @@ impl Renderer {
             working_directory: working_directory,
 
             renderer2d: husky2d::Renderer2D::new("roboto".to_string()),
+            voxel_renderer: husky3d::voxel::VoxelRenderer::new(),
 
             active_color: (1.0, 1.0, 1.0, 1.0),
 
@@ -188,6 +191,7 @@ impl UserData for RendererGuard {
             Ok(win_size)
         });
 
+        //TODO: Abstract to husky2d/text.rs
         methods.add_method("print", |_, obj, (text, x,y): (String, f32,f32)| {
             let mut renderer = obj.get_lock();
             let font = renderer.fonts.get("roboto").unwrap().clone();
@@ -198,5 +202,6 @@ impl UserData for RendererGuard {
 
         shader_wrapper::add_methods(methods);
         husky2d::add_methods(methods);
+        husky3d::add_methods(methods);
     }
 }

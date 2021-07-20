@@ -1,15 +1,35 @@
-/// Voxels are 2 byte large, and store a reference to a
-/// material, as well as a reference to the colour palette.
-/// It uses 8 bits for each, which means we can use a maximum
-/// of 256 materials and 256 colours. This is not a lot, so
-/// I'll definitely have to find a way to change this.
-pub struct Voxel(u16);
+use mlua::{UserData, UserDataMethods};
+
+/// Voxels are 4 byte large, to facilitate storing colour and
+/// material properties. I could have opted for a material/colour
+/// palette, but that would have severely limited the amount of
+/// colours/materials I could use, and would make the interface
+/// a lot less intuitive.
+#[derive(Copy, Clone)]
+pub struct Voxel(u32);
 
 impl Voxel {
-    pub fn from_id(mat_id: u8, pal_id: u8) -> Self {
-        let mut data: u16 = mat_id as u16;
-        data |= (pal_id as u16) << 8;
+    pub fn new(r: u8, g: u8, b: u8, roughness: u8, metalness: u8) -> Self {
+        let mut colour: u16 = 0;
+        colour |= (r as u16) & 0b0000_0000_0001_1111;
+        colour |= (g as u16) & 0b0000_0111_1110_0000;
+        colour |= (b as u16) & 0b1111_1000_0000_0000;
+        let mut mat: u16 = 0;
+        mat |= roughness as u16;
+        mat |= (metalness as u16) << 8;
+        let mut data: u32 = 0;
+        data |= colour as u32;
+        data |= (mat as u32) << 16;
         Self(data)
+    }
+}
+
+impl UserData for Voxel {
+    fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("setColor", |_, voxel, (r,g,b): (f32, f32, f32)| {
+            todo!();
+            Ok(())
+        });
     }
 }
 
