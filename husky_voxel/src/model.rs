@@ -19,11 +19,25 @@ impl Voxel {
 /// bricks is less efficient than using a sparse octree, but
 /// it is much quicker to modify. These bricks will be stored
 /// in a multi-level array, so both raytracing and modifying
-/// them is easy.
+/// them is easy. The multi-level array relies on 16 bit
+/// coordinates which is reflected in the bricks as well.
 pub struct Brick {
+    pub pos: (u16, u16, u16),
     pub data: [Voxel; 8*8*8],
 }
 
-pub struct Model {
-    
+/// The model trait is to be implemented for any struct meant
+/// to store voxels in some way or another. It provides the
+/// scene code an easy way to interact with the data through
+/// a simple interface, without it having to worry about whatever
+/// internal format was used.
+pub trait Model {
+    fn get_bricks(&self) -> Vec<Brick>;
+}
+
+/// The modifyable trait is for any struct that allows the user
+/// to modify the voxels inside.
+pub trait Modifyable {
+    fn get_voxel(&self, pos: (u64, u64, u64)) -> Voxel;
+    fn set_voxel(&self, pos: (u64, u64, u64), voxel: Voxel);
 }
