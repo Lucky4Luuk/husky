@@ -34,7 +34,7 @@ impl UserData for Voxel {
 }
 
 /// Bricks are a fundamental part of our memory management.
-/// By storing only 8x8x8 blocks of voxels raw, we can still
+/// By storing only 64x64x64 blocks of voxels raw, we can still
 /// exclude storing large blocks of empty voxels. Using these
 /// bricks is less efficient than using a sparse octree, but
 /// it is much quicker to modify. These bricks will be stored
@@ -43,7 +43,16 @@ impl UserData for Voxel {
 /// coordinates which is reflected in the bricks as well.
 pub struct Brick {
     pub pos: (u16, u16, u16),
-    pub data: [Voxel; 8*8*8],
+    pub data: [Voxel; 64*64*64], //64x64x64 voxels = 1 megabyte (voxel is 4 bytes)
+}
+
+impl Brick {
+    pub fn empty(x: u16, y: u16, z: u16) -> Self {
+        Self {
+            pos: (x,y,z),
+            data: [Voxel::new(255, 255, 255, 255, 0); 64*64*64]
+        }
+    }
 }
 
 /// The model trait is to be implemented for any struct meant

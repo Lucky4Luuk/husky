@@ -2,6 +2,8 @@ pub mod surface;
 pub mod model;
 pub mod scene;
 
+pub mod voxmodel;
+
 use mlua::{UserData, UserDataMethods};
 
 #[derive(Clone)]

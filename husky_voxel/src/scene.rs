@@ -18,6 +18,7 @@ impl UserData for ModelReference {}
 #[derive(Clone)]
 pub struct Scene {
     models: Vec<Arc<Box<dyn Model>>>,
+    
 }
 
 impl Scene {

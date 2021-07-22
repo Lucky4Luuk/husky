@@ -8,3 +8,5 @@ edition = "2018"
 [dependencies]
 log = "*"
 mlua = "0.6.1"
+
+dot_vox = "4.1.0"
