@@ -517,6 +517,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gl_wrapper"
+version = "0.1.0"
+dependencies = [
+ "gl",
+ "glam",
+ "glutin",
+ "log",
+]
+
+[[package]]
 name = "glam"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -617,6 +627,8 @@ name = "husky"
 version = "0.1.0"
 dependencies = [
  "getopts",
+ "gl",
+ "gl_wrapper",
  "glam",
  "glutin",
  "husky_graphics",
@@ -631,6 +643,7 @@ name = "husky_graphics"
 version = "0.1.0"
 dependencies = [
  "gl",
+ "gl_wrapper",
  "glam",
  "glutin",
  "husky_voxel",

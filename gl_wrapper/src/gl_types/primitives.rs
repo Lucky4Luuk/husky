@@ -1,7 +1,7 @@
 use std::ffi::CString;
 
 use super::UniformValue;
-use crate::gl_wrapper::shader::ShaderProgram;
+use crate::shader::ShaderProgram;
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug)]

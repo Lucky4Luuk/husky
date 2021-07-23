@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use mlua::{UserData, UserDataMethods};
 
 /// Voxels are 4 byte large, to facilitate storing colour and
@@ -41,17 +43,23 @@ impl UserData for Voxel {
 /// in a multi-level array, so both raytracing and modifying
 /// them is easy. The multi-level array relies on 16 bit
 /// coordinates which is reflected in the bricks as well.
+#[derive(Clone)]
 pub struct Brick {
     pub pos: (u16, u16, u16),
-    pub data: [Voxel; 64*64*64], //64x64x64 voxels = 1 megabyte (voxel is 4 bytes)
+    pub data: Arc<Mutex<[Voxel; 64*64*64]>>, //64x64x64 voxels = 1 megabyte (voxel is 4 bytes)
 }
 
 impl Brick {
     pub fn empty(x: u16, y: u16, z: u16) -> Self {
         Self {
             pos: (x,y,z),
-            data: [Voxel::new(255, 255, 255, 255, 0); 64*64*64]
+            data: Arc::new(Mutex::new([Voxel::new(255, 255, 255, 255, 0); 64*64*64]))
         }
+    }
+
+    pub fn set_voxel(&self, x: u8, y: u8, z: u8, voxel: Voxel) {
+        let mut lock = self.data.lock().expect("Failed to get lock on voxel data!");
+        (*lock)[x as usize + (y as usize)*64 + (z as usize)*64*64] = voxel;
     }
 }
 
@@ -61,7 +69,7 @@ impl Brick {
 /// a simple interface, without it having to worry about whatever
 /// internal format was used.
 pub trait Model {
-    fn get_bricks(&self) -> Vec<Brick>;
+    fn get_bricks(&self) -> &Vec<Brick>;
 }
 
 /// The modifyable trait is for any struct that allows the user

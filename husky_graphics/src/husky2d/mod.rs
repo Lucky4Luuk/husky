@@ -9,10 +9,10 @@ mod primitive;
 
 pub use primitive::Drawmode2D;
 
-use crate::gl_wrapper::gl_types::f32_f32;
-use crate::gl_wrapper::gl_types::Texture;
-use crate::gl_wrapper::mesh::{Vertex, Mesh};
-use crate::gl_wrapper::shader::{Shader, ShaderProgram};
+use gl_wrapper::gl_types::f32_f32;
+use gl_wrapper::gl_types::Texture;
+use gl_wrapper::mesh::{Vertex, Mesh};
+use gl_wrapper::shader::{Shader, ShaderProgram};
 
 pub fn add_methods<'lua, M: UserDataMethods<'lua, crate::RendererGuard>>(methods: &mut M) {
     primitive::add_methods(methods);

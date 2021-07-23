@@ -2,9 +2,9 @@ use glam::*;
 
 use crate::WINDOW_SIZE;
 
-use crate::gl_wrapper::gl_types::f32_f32_f32_f32;
-use crate::gl_wrapper::mesh::{Vertex, Mesh};
-use crate::gl_wrapper::shader::ShaderProgram;
+use gl_wrapper::gl_types::f32_f32_f32_f32;
+use gl_wrapper::mesh::{Vertex, Mesh};
+use gl_wrapper::shader::ShaderProgram;
 
 use mlua::UserDataMethods;
 

@@ -11,7 +11,6 @@ use rusttype::Font;
 use mlua::prelude::*;
 use mlua::{Table, UserData, UserDataMethods};
 
-pub(crate) mod gl_wrapper;
 use gl_wrapper::shader::Shader as GlShader;
 
 pub mod husky2d;
@@ -19,10 +18,6 @@ pub mod husky3d;
 
 mod shader_wrapper;
 pub use shader_wrapper::Shader;
-
-pub fn load_gl(gl_context: &glutin::Context<glutin::PossiblyCurrent>) {
-    gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
-}
 
 lazy_static! {
     pub static ref WINDOW_SIZE: Mutex<(u32, u32)> = Mutex::new((1,1));

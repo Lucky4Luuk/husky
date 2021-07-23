@@ -4,11 +4,11 @@ use mlua::{Result as LuaResult, Error as LuaError, UserData, UserDataMethods};
 
 use dot_vox::Model as VoxModelRaw;
 
-use crate::model::{Brick, Model};
+use crate::model::{Voxel, Brick, Model};
 
 #[derive(Clone)]
 pub struct VoxModel {
-    bricks: Vec<Arc<Brick>>,
+    bricks: Vec<Brick>,
 }
 
 impl VoxModel {
@@ -16,25 +16,46 @@ impl VoxModel {
         let vox = dot_vox::load(path).or_else(|_| Err(LuaError::RuntimeError("Failed to find file!".into())) )?;
         //TODO: When dot_vox updates to support scene graph loading, we should place models in the right spot
         //      Right now all models will be at 0,0,0
-        let mut brick = Brick::empty(0,0,0);
 
-        for model in &vox.models {
-            for voxel in &model.voxels {
-                let wx = voxel.x;
-                let wy = voxel.y;
-                let wz = voxel.z;
-                brick.data[wx][wy][wz] = Voxel::new(r,g,b, roughness, metalness);
+        //Create a cluster of bricks big enough for a 256x256x256 model
+        let mut bricks = Vec::new();
+        for ix in 0..4 {
+            for iy in 0..4 {
+                for iz in 0..4 {
+                    bricks.push(Brick::empty(ix, iy, iz));
+                }
             }
         }
 
-        Ok(Self {
-            bricks: vec![Arc::new(brick)]
-        })
+        let obj = Self {
+            bricks: bricks
+        };
+
+        for model in &vox.models {
+            for voxel in &model.voxels {
+                let wx = voxel.x as u64;
+                let wy = voxel.y as u64;
+                let wz = voxel.z as u64;
+                let r = 255;
+                let g = 255;
+                let b = 255;
+                let roughness = 255;
+                let metalness = 0;
+                obj.set_voxel(wx,wy,wz, Voxel::new(r,g,b, roughness, metalness));
+            }
+        }
+
+        Ok(obj)
+    }
+
+    pub fn set_voxel(&self, x: u64, y: u64, z: u64, voxel: Voxel) {
+        //TODO: Support creating bricks when needed
+        todo!();
     }
 }
 
 impl Model for VoxModel {
-    fn get_bricks(&self) -> Vec<Brick> {
-        Vec::new()
+    fn get_bricks(&self) -> &Vec<Brick> {
+        &self.bricks
     }
 }

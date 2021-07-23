@@ -1,5 +1,5 @@
 [package]
-name = "husky"
+name = "gl_wrapper"
 version = "0.1.0"
 authors = ["Luuk van Oijen <lazyluuk.channel@gmail.com>"]
 edition = "2018"
@@ -8,16 +8,7 @@ edition = "2018"
 
 [dependencies]
 log = "*"
-pretty_env_logger = "*"
-
-getopts = "0.2.21"
 
 glutin = "0.26.0"
 glam = "0.16.0"
 gl = "0.14.0"
-
-gl_wrapper = { path = "gl_wrapper" }
-
-husky_lua = { path = "husky_lua" }
-husky_voxel = { path = "husky_voxel" }
-husky_graphics = { path = "husky_graphics" }

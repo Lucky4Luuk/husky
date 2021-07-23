@@ -1,4 +1,4 @@
-use crate::gl_wrapper::gl_types::Texture;
+use crate::gl_types::Texture;
 
 /// A framebuffer to render to. Currently does not support 3D textures or render buffers.
 pub struct Framebuffer {

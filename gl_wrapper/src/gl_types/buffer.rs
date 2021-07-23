@@ -1,4 +1,4 @@
-use crate::gl_wrapper::mesh::Vertex;
+use crate::mesh::Vertex;
 use super::{f32_f32, f32_f32_f32, f32_f32_f32_f32};
 
 pub trait BufferType {
@@ -86,6 +86,19 @@ impl<B> Buffer<B> where B: BufferType {
                 B::BUFFER_TYPE, // target
                 (data.len() * ::std::mem::size_of::<T>()) as gl::types::GLsizeiptr, // size of data in bytes
                 data.as_ptr() as *const gl::types::GLvoid, // pointer to data
+                usage,
+            );
+        }
+    }
+
+    /// Assumes the buffer is already bound.
+    /// Length is specified in bytes.
+    pub fn empty_with_length(&self, length: usize, usage: gl::types::GLenum) {
+        unsafe {
+            gl::BufferData(
+                B::BUFFER_TYPE, // target
+                length as gl::types::GLsizeiptr, // size of data in bytes
+                std::ptr::null() as *const gl::types::GLvoid, // pointer to data
                 usage,
             );
         }

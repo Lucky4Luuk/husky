@@ -20,6 +20,10 @@ static DEFAULT_WINDOW_SIZE: (u32, u32) = (1280u32, 720u32);
 
 static DEFAULT_PROG_SRC: &'static str = include_str!("../default_main.lua");
 
+fn load_gl(gl_context: &glutin::Context<glutin::PossiblyCurrent>) {
+    gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let path_input = if args.len() > 1 { args[1].clone() } else { "".to_string() };
@@ -65,7 +69,7 @@ fn main() {
     let context = ContextBuilder::new().with_vsync(false).with_gl(GlRequest::Specific(Api::OpenGl, (4,5))).with_gl_profile(GlProfile::Core).build_windowed(window_builder, &event_loop).expect("Failed to create opengl context!");
     let context = unsafe { context.make_current().expect("Failed to make context current!") };
 
-    husky_graphics::load_gl(&context.context());
+    load_gl(&context.context());
 
     let mut old_frametime = Instant::now();
     let mut close_requested = false;

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::gl_wrapper::gl_types::UniformValue;
-use crate::gl_wrapper::shader::{Shader as GlShader, ShaderProgram as GlShaderProgram};
+use gl_wrapper::gl_types::UniformValue;
+use gl_wrapper::shader::{Shader as GlShader, ShaderProgram as GlShaderProgram};
 use gl::types::*;
 
 use mlua::prelude::{LuaResult, LuaValue, LuaError};
