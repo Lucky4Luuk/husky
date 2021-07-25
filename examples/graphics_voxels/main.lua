@@ -1,3 +1,9 @@
+--[[
+THIS DOES NOT WORK RIGHT NOW.
+VOXEL SUPPORT IS STILL EXTREMELY WIP, NOTHING HERE IS FINAL.
+Thanks :)
+]]--
+
 local winSizeX = 1
 local winSizeY = 1
 
